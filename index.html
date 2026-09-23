@@ -433,9 +433,56 @@
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.001ms !important; }
   }
+
+  /* ---------- Intro ---------- */
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #0A0C14;
+    color: #E4E7EE;
+    font-family: "IBM Plex Mono", monospace;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity .5s ease;
+  }
+  .intro.intro-hide { opacity: 0; pointer-events: none; }
+  .intro-inner { width: 100%; max-width: 560px; }
+  .intro-lines { display: flex; flex-direction: column; gap: 8px; min-height: 170px; }
+  .intro-line { font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .intro-line.cmd { color: #F2F4F8; }
+  .intro-line.cmd .prompt { color: #5CA89B; margin-right: 8px; }
+  .intro-line.out { color: #9AA0B4; padding-left: 4px; }
+  .intro-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 1.05em;
+    background: #5CA89B;
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: introBlink 1s steps(1) infinite;
+  }
+  @keyframes introBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  .intro-skip {
+    margin-top: 28px;
+    font-size: 0.72rem;
+    color: #5A6072;
+    letter-spacing: 0.02em;
+  }
 </style>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<div id="intro" class="intro" aria-hidden="true">
+  <div class="intro-inner">
+    <div class="intro-lines" id="introLines"></div>
+    <div class="intro-skip">Klicken oder Taste drücken zum Überspringen</div>
+  </div>
+</div>
 
 <div class="wrap">
   <header class="nav">
@@ -767,5 +814,95 @@
         sel.addRange(range);
       } catch (e) {}
     }
+  })();
+
+  (function () {
+    var introEl = document.getElementById('intro');
+    if (!introEl) return;
+
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduceMotion) {
+      introEl.hidden = true;
+      return;
+    }
+
+    document.body.style.overflow = 'hidden';
+
+    function finishIntro() {
+      if (introEl.hidden || introEl.classList.contains('intro-hide')) return;
+      introEl.classList.add('intro-hide');
+      document.removeEventListener('keydown', finishIntro);
+      setTimeout(function () {
+        introEl.hidden = true;
+        document.body.style.overflow = '';
+      }, 550);
+    }
+
+    introEl.addEventListener('click', finishIntro);
+    document.addEventListener('keydown', finishIntro);
+
+    function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+    function typeCmd(container, text, speed) {
+      return new Promise(function (resolve) {
+        var line = document.createElement('div');
+        line.className = 'intro-line cmd';
+        var prompt = document.createElement('span');
+        prompt.className = 'prompt';
+        prompt.textContent = '$';
+        var textNode = document.createTextNode('');
+        var cursor = document.createElement('span');
+        cursor.className = 'intro-cursor';
+        line.appendChild(prompt);
+        line.appendChild(textNode);
+        line.appendChild(cursor);
+        container.appendChild(line);
+        var i = 0;
+        var timer = setInterval(function () {
+          i++;
+          textNode.textContent = text.slice(0, i);
+          if (i >= text.length) {
+            clearInterval(timer);
+            cursor.remove();
+            resolve();
+          }
+        }, speed);
+      });
+    }
+
+    function printOut(container, text) {
+      var line = document.createElement('div');
+      line.className = 'intro-line out';
+      line.style.opacity = '0';
+      line.style.transition = 'opacity .3s ease';
+      line.textContent = text;
+      container.appendChild(line);
+      requestAnimationFrame(function () { line.style.opacity = '1'; });
+    }
+
+    async function runIntro() {
+      var container = document.getElementById('introLines');
+      var CHAR_SPEED = 45, CMD_PAUSE = 200, OUT_HOLD = 600, FINAL_WAIT = 900;
+
+      await typeCmd(container, 'whoami', CHAR_SPEED);
+      await wait(CMD_PAUSE);
+      printOut(container, 'Mario Aininger — Support Team Lead');
+      await wait(OUT_HOLD);
+
+      await typeCmd(container, './status.sh', CHAR_SPEED);
+      await wait(CMD_PAUSE);
+      printOut(container, '8+ Jahre Führung · Team 4→8 skaliert · <2h Reaktionszeit');
+      await wait(OUT_HOLD);
+
+      await typeCmd(container, 'open portfolio.html', CHAR_SPEED);
+      await wait(CMD_PAUSE);
+      printOut(container, 'Verbindung hergestellt. Willkommen.');
+      await wait(FINAL_WAIT);
+
+      finishIntro();
+    }
+
+    runIntro();
   })();
 </script>
