@@ -77,6 +77,11 @@
     padding-block: 14px;
     gap: 16px;
   }
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
   .mark {
     font-family: "Fraunces", Georgia, serif;
     font-weight: 600;
@@ -95,6 +100,33 @@
   nav.links a { text-decoration: none; color: var(--ink-muted); transition: color .15s ease; }
   nav.links a:hover, nav.links a:focus-visible { color: var(--accent); }
   nav.links a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+
+  .lang-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+    flex: none;
+  }
+  .lang-toggle button {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    border: none;
+    background: transparent;
+    color: var(--ink-muted);
+    padding: 5px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .lang-toggle button[aria-pressed="true"] {
+    background: var(--accent-teal);
+    color: var(--surface);
+  }
+  .lang-toggle button:hover:not([aria-pressed="true"]) { color: var(--ink); }
+  .lang-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   @media (max-width: 520px) {
     nav.links { display: none; }
@@ -409,11 +441,17 @@
   <header class="nav">
     <div class="nav-inner">
       <div class="mark">Mario<span>.</span>Aininger</div>
-      <nav class="links">
-        <a href="#about">Über mich</a>
-        <a href="#projects">Projekte</a>
-        <a href="#contact">Kontakt</a>
-      </nav>
+      <div class="nav-right">
+        <nav class="links">
+          <a href="#about" data-i18n="navAbout">Über mich</a>
+          <a href="#projects" data-i18n="navProjects">Projekte</a>
+          <a href="#contact" data-i18n="navContact">Kontakt</a>
+        </nav>
+        <div class="lang-toggle" role="group" aria-label="Sprache wählen / choose language">
+          <button type="button" id="lang-de" aria-pressed="true">DE</button>
+          <button type="button" id="lang-en" aria-pressed="false">EN</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -422,12 +460,12 @@
     <div class="hero-content">
       <div class="hero-top">
         <div class="hero-text">
-          <span class="eyebrow">8+ Jahre Führungserfahrung im Support</span>
+          <span class="eyebrow" data-i18n="heroEyebrow">8+ Jahre Führungserfahrung im Support</span>
           <h1>Mario Aininger</h1>
-          <p class="lede">Ich führe Support-Teams durch komplexe Fälle, sorge dafür, dass Kund:innen schnell wieder arbeiten können — und baue nebenbei kleine Web-Apps für meine Familie.</p>
+          <p class="lede" data-i18n="heroLede">Ich führe Support-Teams durch komplexe Fälle, sorge dafür, dass Kund:innen schnell wieder arbeiten können — und baue nebenbei kleine Web-Apps für meine Familie.</p>
           <div class="hero-cta">
-            <a class="btn btn-primary" href="#contact">Kontakt aufnehmen</a>
-            <a class="btn btn-ghost" href="https://github.com/marioaininger-bot" target="_blank" rel="noopener">GitHub ansehen</a>
+            <a class="btn btn-primary" href="#contact" data-i18n="heroCtaContact">Kontakt aufnehmen</a>
+            <a class="btn btn-ghost" href="https://github.com/marioaininger-bot" target="_blank" rel="noopener" data-i18n="heroCtaGithub">GitHub ansehen</a>
           </div>
         </div>
         <img class="hero-avatar" src="memoji.png" alt="Memoji von Mario Aininger, hinter einem Laptop" width="220" height="220">
@@ -437,26 +475,26 @@
 
   <main>
     <section class="about" id="about">
-      <span class="section-label">Über mich</span>
-      <h2>Support, der Technik in Klarheit übersetzt</h2>
-      <p>Über 8 Jahre Führungserfahrung im technischen Support — von der ersten Teamverantwortung bis zur Leitung eines internationalen Teams in der Hotel-Technologie-Branche.</p>
+      <span class="section-label" data-i18n="aboutLabel">Über mich</span>
+      <h2 data-i18n="aboutH2">Support, der Technik in Klarheit übersetzt</h2>
+      <p data-i18n="aboutIntro">Über 8 Jahre Führungserfahrung im technischen Support — von der ersten Teamverantwortung bis zur Leitung eines internationalen Teams in der Hotel-Technologie-Branche.</p>
 
       <div class="stat-grid">
         <div class="stat-tile">
           <span class="stat-value">8+</span>
-          <span class="stat-label">Jahre Führungserfahrung</span>
+          <span class="stat-label" data-i18n="statYearsLabel">Jahre Führungserfahrung</span>
         </div>
         <div class="stat-tile">
           <span class="stat-value">4 → 8</span>
-          <span class="stat-label">Teammitglieder skaliert</span>
+          <span class="stat-label" data-i18n="statScaledLabel">Teammitglieder skaliert</span>
         </div>
         <div class="stat-tile">
           <span class="stat-value">&lt;2h</span>
-          <span class="stat-label">Ø Reaktionszeit (vorher ~12h)</span>
+          <span class="stat-label" data-i18n="statResponseLabel">Ø Reaktionszeit (vorher ~12h)</span>
         </div>
         <div class="stat-tile">
           <span class="stat-value">80%+</span>
-          <span class="stat-label">Bewertungen mit Top-CSAT (5/5)</span>
+          <span class="stat-label" data-i18n="statCsatLabel">Bewertungen mit Top-CSAT (5/5)</span>
         </div>
       </div>
 
@@ -465,67 +503,67 @@
           <span class="timeline-dot" aria-hidden="true"></span>
           <div class="timeline-head">
             <h3>Manager, Hotel Technology</h3>
-            <span class="timeline-period">2021–heute</span>
+            <span class="timeline-period" data-i18n="tl1Period">2021–heute</span>
           </div>
-          <p>Team von 4 auf 8 Mitarbeiter:innen skaliert, Einführung eines KI-gestützten Helpdesk-Systems sowie von KI-Tools zur Automatisierung im First-Level-Support, Eskalations- und Sicherheitsmanagement, Koordination mit Finance, Sales, Product & Engineering.</p>
+          <p data-i18n="tl1Desc">Team von 4 auf 8 Mitarbeiter:innen skaliert, Einführung eines KI-gestützten Helpdesk-Systems sowie von KI-Tools zur Automatisierung im First-Level-Support, Eskalations- und Sicherheitsmanagement, Koordination mit Finance, Sales, Product & Engineering.</p>
         </div>
         <div class="timeline-item">
           <span class="timeline-dot" aria-hidden="true"></span>
           <div class="timeline-head">
             <h3>Team Lead, Hotel Technology Support</h3>
-            <span class="timeline-period">2018–2021</span>
+            <span class="timeline-period" data-i18n="tl2Period">2018–2021</span>
           </div>
-          <p>Support-Team für technische B2B-Anfragen geführt, Wissensdatenbank und Self-Service-Ressourcen eingeführt, Coaching und interne Schulungen für das Team.</p>
+          <p data-i18n="tl2Desc">Support-Team für technische B2B-Anfragen geführt, Wissensdatenbank und Self-Service-Ressourcen eingeführt, Coaching und interne Schulungen für das Team.</p>
         </div>
         <div class="timeline-item">
           <span class="timeline-dot" aria-hidden="true"></span>
           <div class="timeline-head">
             <h3>Technical Support Specialist</h3>
-            <span class="timeline-period">2017–2018</span>
+            <span class="timeline-period" data-i18n="tl3Period">2017–2018</span>
           </div>
-          <p>First- und Second-Level-Support für Hotelsoftware, enge Zusammenarbeit mit der Entwicklung zur Fehleranalyse, Dokumentation von Lösungen im Wissenssystem.</p>
+          <p data-i18n="tl3Desc">First- und Second-Level-Support für Hotelsoftware, enge Zusammenarbeit mit der Entwicklung zur Fehleranalyse, Dokumentation von Lösungen im Wissenssystem.</p>
         </div>
       </div>
 
-      <p class="about-side">Neben dem Job code ich gerne an eigenen kleinen Projekten — meist dort, wo Technik auf Geschichten oder Sterne trifft.</p>
+      <p class="about-side" data-i18n="aboutSide">Neben dem Job code ich gerne an eigenen kleinen Projekten — meist dort, wo Technik auf Geschichten oder Sterne trifft.</p>
     </section>
 
     <section class="projects" id="projects">
-      <span class="section-label">Nebenprojekte</span>
-      <h2>Was ich außerhalb des Jobs baue</h2>
-      <p>Zwei kleinere Coding-Projekte auf GitHub — Spielwiese für Ideen abseits des Support-Alltags.</p>
+      <span class="section-label" data-i18n="projectsLabel">Nebenprojekte</span>
+      <h2 data-i18n="projectsH2">Was ich außerhalb des Jobs baue</h2>
+      <p data-i18n="projectsIntro">Zwei kleinere Coding-Projekte auf GitHub — Spielwiese für Ideen abseits des Support-Alltags.</p>
       <div class="project-grid">
         <a class="project-card" href="https://github.com/marioaininger-bot/bedtimestory" target="_blank" rel="noopener">
-          <span class="project-tag">Web-App</span>
-          <h3>Gute Nacht Geschichte</h3>
-          <p>Kinder wählen Genre und Lesedauer, ein Generator erzählt daraus eine personalisierte Gute-Nacht-Geschichte — inklusive Kinderprofil und Einschlaf-Animationen.</p>
+          <span class="project-tag" data-i18n="p1Tag">Web-App</span>
+          <h3 data-i18n="p1Title">Gute Nacht Geschichte</h3>
+          <p data-i18n="p1Desc">Kinder wählen Genre und Lesedauer, ein Generator erzählt daraus eine personalisierte Gute-Nacht-Geschichte — inklusive Kinderprofil und Einschlaf-Animationen.</p>
           <span class="project-repo">↗ github.com/marioaininger-bot/bedtimestory</span>
         </a>
         <a class="project-card" href="https://github.com/marioaininger-bot/starssystem" target="_blank" rel="noopener">
-          <span class="project-tag">Web-App</span>
-          <h3>Sophias Sterne</h3>
-          <p>Ein spielerischer Tages- und Wochenplan für Kinder: Aufgaben abhaken, Sterne sammeln und bei einem perfekten Tag wandert ein Euro ins digitale Sparschwein.</p>
+          <span class="project-tag" data-i18n="p2Tag">Web-App</span>
+          <h3 data-i18n="p2Title">Sophias Sterne</h3>
+          <p data-i18n="p2Desc">Ein spielerischer Tages- und Wochenplan für Kinder: Aufgaben abhaken, Sterne sammeln und bei einem perfekten Tag wandert ein Euro ins digitale Sparschwein.</p>
           <span class="project-repo">↗ github.com/marioaininger-bot/starssystem</span>
         </a>
       </div>
     </section>
 
     <section class="contact" id="contact">
-      <span class="section-label">Kontakt</span>
-      <h2>Melde dich gern</h2>
-      <p>Am einfachsten erreichst du mich per E-Mail. Adresse zum Kopieren:</p>
+      <span class="section-label" data-i18n="contactLabel">Kontakt</span>
+      <h2 data-i18n="contactH2">Melde dich gern</h2>
+      <p data-i18n="contactIntro">Am einfachsten erreichst du mich per E-Mail. Adresse zum Kopieren:</p>
       <div class="contact-list">
         <div class="contact-row">
-          <span class="label">E-Mail</span>
+          <span class="label" data-i18n="emailLabel">E-Mail</span>
           <span class="value" id="email-value">mario@aininger.com</span>
-          <button class="copy-btn" id="copy-email" type="button">Kopieren</button>
+          <button class="copy-btn" id="copy-email" type="button" data-i18n="copy">Kopieren</button>
         </div>
         <div class="contact-row">
-          <span class="label">GitHub</span>
+          <span class="label" data-i18n="githubLabel">GitHub</span>
           <span class="value"><a href="https://github.com/marioaininger-bot" target="_blank" rel="noopener">github.com/marioaininger-bot</a></span>
         </div>
         <div class="contact-row">
-          <span class="label">LinkedIn</span>
+          <span class="label" data-i18n="linkedinLabel">LinkedIn</span>
           <span class="value"><a href="https://www.linkedin.com/in/mario-aininger-a715a8198/" target="_blank" rel="noopener">linkedin.com/in/mario-aininger</a></span>
         </div>
       </div>
@@ -534,11 +572,125 @@
 
   <footer>
     <p>© 2026 Mario Aininger</p>
-    <span class="footer-note">Support · Code · Geschichten</span>
+    <span class="footer-note" data-i18n="footerNote">Support · Code · Geschichten</span>
   </footer>
 </div>
 
 <script>
+  var I18N = {
+    de: {
+      navAbout: "Über mich",
+      navProjects: "Projekte",
+      navContact: "Kontakt",
+      heroEyebrow: "8+ Jahre Führungserfahrung im Support",
+      heroLede: "Ich führe Support-Teams durch komplexe Fälle, sorge dafür, dass Kund:innen schnell wieder arbeiten können — und baue nebenbei kleine Web-Apps für meine Familie.",
+      heroCtaContact: "Kontakt aufnehmen",
+      heroCtaGithub: "GitHub ansehen",
+      aboutLabel: "Über mich",
+      aboutH2: "Support, der Technik in Klarheit übersetzt",
+      aboutIntro: "Über 8 Jahre Führungserfahrung im technischen Support — von der ersten Teamverantwortung bis zur Leitung eines internationalen Teams in der Hotel-Technologie-Branche.",
+      statYearsLabel: "Jahre Führungserfahrung",
+      statScaledLabel: "Teammitglieder skaliert",
+      statResponseLabel: "Ø Reaktionszeit (vorher ~12h)",
+      statCsatLabel: "Bewertungen mit Top-CSAT (5/5)",
+      tl1Period: "2021–heute",
+      tl1Desc: "Team von 4 auf 8 Mitarbeiter:innen skaliert, Einführung eines KI-gestützten Helpdesk-Systems sowie von KI-Tools zur Automatisierung im First-Level-Support, Eskalations- und Sicherheitsmanagement, Koordination mit Finance, Sales, Product & Engineering.",
+      tl2Period: "2018–2021",
+      tl2Desc: "Support-Team für technische B2B-Anfragen geführt, Wissensdatenbank und Self-Service-Ressourcen eingeführt, Coaching und interne Schulungen für das Team.",
+      tl3Period: "2017–2018",
+      tl3Desc: "First- und Second-Level-Support für Hotelsoftware, enge Zusammenarbeit mit der Entwicklung zur Fehleranalyse, Dokumentation von Lösungen im Wissenssystem.",
+      aboutSide: "Neben dem Job code ich gerne an eigenen kleinen Projekten — meist dort, wo Technik auf Geschichten oder Sterne trifft.",
+      projectsLabel: "Nebenprojekte",
+      projectsH2: "Was ich außerhalb des Jobs baue",
+      projectsIntro: "Zwei kleinere Coding-Projekte auf GitHub — Spielwiese für Ideen abseits des Support-Alltags.",
+      p1Tag: "Web-App",
+      p1Title: "Gute Nacht Geschichte",
+      p1Desc: "Kinder wählen Genre und Lesedauer, ein Generator erzählt daraus eine personalisierte Gute-Nacht-Geschichte — inklusive Kinderprofil und Einschlaf-Animationen.",
+      p2Tag: "Web-App",
+      p2Title: "Sophias Sterne",
+      p2Desc: "Ein spielerischer Tages- und Wochenplan für Kinder: Aufgaben abhaken, Sterne sammeln und bei einem perfekten Tag wandert ein Euro ins digitale Sparschwein.",
+      contactLabel: "Kontakt",
+      contactH2: "Melde dich gern",
+      contactIntro: "Am einfachsten erreichst du mich per E-Mail. Adresse zum Kopieren:",
+      emailLabel: "E-Mail",
+      githubLabel: "GitHub",
+      linkedinLabel: "LinkedIn",
+      copy: "Kopieren",
+      copied: "Kopiert",
+      selected: "Markiert",
+      footerNote: "Support · Code · Geschichten"
+    },
+    en: {
+      navAbout: "About",
+      navProjects: "Projects",
+      navContact: "Contact",
+      heroEyebrow: "8+ years of leadership experience in support",
+      heroLede: "I lead support teams through complex cases, make sure customers are back up and running fast — and build small web apps for my family on the side.",
+      heroCtaContact: "Get in touch",
+      heroCtaGithub: "View GitHub",
+      aboutLabel: "About",
+      aboutH2: "Support that turns technology into clarity",
+      aboutIntro: "Over 8 years of leadership experience in technical support — from first team responsibility to leading an international team in the hotel technology industry.",
+      statYearsLabel: "years of leadership experience",
+      statScaledLabel: "team members scaled",
+      statResponseLabel: "avg. response time (was ~12h)",
+      statCsatLabel: "reviews with top CSAT (5/5)",
+      tl1Period: "2021–present",
+      tl1Desc: "Scaled the team from 4 to 8 people, introduced an AI-powered helpdesk system and AI tools to automate first-level support, handled escalations and security incidents, coordinated with Finance, Sales, Product & Engineering.",
+      tl2Period: "2018–2021",
+      tl2Desc: "Led a support team handling technical B2B requests, introduced a knowledge base and self-service resources, coached the team and ran internal training.",
+      tl3Period: "2017–2018",
+      tl3Desc: "First- and second-level support for hotel software, worked closely with engineering on root-cause analysis, documented solutions in the knowledge base.",
+      aboutSide: "Outside of work I like coding small projects of my own — usually where technology meets stories or stars.",
+      projectsLabel: "Side projects",
+      projectsH2: "What I build outside of work",
+      projectsIntro: "Two small coding projects on GitHub — a playground for ideas outside the support day-to-day.",
+      p1Tag: "Web app",
+      p1Title: "Goodnight Story",
+      p1Desc: "Kids pick a genre and reading length, and a generator turns it into a personalized bedtime story — including a child profile and cozy loading animations. (German-language app.)",
+      p2Tag: "Web app",
+      p2Title: "Sophia's Stars",
+      p2Desc: "A playful daily and weekly routine chart for kids: check off tasks, collect stars, and a perfect day sends a euro into the digital piggy bank. (German-language app.)",
+      contactLabel: "Contact",
+      contactH2: "Get in touch",
+      contactIntro: "The easiest way to reach me is by email. Address to copy:",
+      emailLabel: "Email",
+      githubLabel: "GitHub",
+      linkedinLabel: "LinkedIn",
+      copy: "Copy",
+      copied: "Copied",
+      selected: "Selected",
+      footerNote: "Support · Code · Stories"
+    }
+  };
+
+  var currentLang = 'de';
+
+  function applyLang(lang) {
+    var dict = I18N[lang] || I18N.de;
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (dict[key] !== undefined) el.textContent = dict[key];
+    });
+    document.documentElement.setAttribute('lang', lang);
+    var deBtn = document.getElementById('lang-de');
+    var enBtn = document.getElementById('lang-en');
+    if (deBtn) deBtn.setAttribute('aria-pressed', String(lang === 'de'));
+    if (enBtn) enBtn.setAttribute('aria-pressed', String(lang === 'en'));
+    currentLang = lang;
+    try { localStorage.setItem('site_lang', lang); } catch (e) {}
+  }
+
+  (function initLang() {
+    var saved = null;
+    try { saved = localStorage.getItem('site_lang'); } catch (e) {}
+    applyLang(saved === 'en' ? 'en' : 'de');
+    var deBtn = document.getElementById('lang-de');
+    var enBtn = document.getElementById('lang-en');
+    if (deBtn) deBtn.addEventListener('click', function () { applyLang('de'); });
+    if (enBtn) enBtn.addEventListener('click', function () { applyLang('en'); });
+  })();
+
   (function () {
     var canvas = document.getElementById('sky');
     var ctx = canvas.getContext('2d');
@@ -594,8 +746,8 @@
       copyBtn.addEventListener('click', function () {
         var text = emailVal.textContent.trim();
         function done(ok) {
-          copyBtn.textContent = ok ? 'Kopiert' : 'Markiert';
-          setTimeout(function () { copyBtn.textContent = 'Kopieren'; }, 1600);
+          copyBtn.textContent = ok ? I18N[currentLang].copied : I18N[currentLang].selected;
+          setTimeout(function () { copyBtn.textContent = I18N[currentLang].copy; }, 1600);
         }
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(function () { done(true); }, function () {
