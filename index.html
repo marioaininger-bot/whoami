@@ -449,6 +449,13 @@
   .copy-btn:hover { border-color: var(--accent-teal); color: var(--accent-teal); }
   .copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  /* ---------- Now (live GitHub activity) ---------- */
+  .now-card { margin-top: 30px; }
+  .now-card .section-label { margin-bottom: 10px; }
+  .now-link { text-decoration: none; border-bottom: 1px solid var(--border); color: inherit; }
+  .now-link:hover { border-color: var(--accent-teal); color: var(--accent-teal); }
+  .now-time { color: var(--ink-muted); margin-left: 6px; }
+
   footer {
     padding-block: 28px 40px;
     display: flex;
@@ -609,6 +616,14 @@
       </div>
 
       <p class="about-side" data-i18n="aboutSide">Neben dem Job code ich gerne an eigenen kleinen Projekten — meist dort, wo Technik auf Geschichten oder Sterne trifft.</p>
+
+      <div class="now-card">
+        <span class="section-label" data-i18n="nowLabel">Live von GitHub</span>
+        <div class="contact-row">
+          <span class="label" data-i18n="nowRowLabel">Gerade</span>
+          <span class="value" id="now-value" data-i18n="nowLoading">Lade GitHub-Aktivität …</span>
+        </div>
+      </div>
     </section>
 
     <section class="projects" id="projects">
@@ -683,6 +698,12 @@
       tl3Period: "2017–2018",
       tl3Desc: "First- und Second-Level-Support für Hotelsoftware, enge Zusammenarbeit mit der Entwicklung zur Fehleranalyse, Dokumentation von Lösungen im Wissenssystem.",
       aboutSide: "Neben dem Job code ich gerne an eigenen kleinen Projekten — meist dort, wo Technik auf Geschichten oder Sterne trifft.",
+      nowLabel: "Live von GitHub",
+      nowRowLabel: "Gerade",
+      nowLoading: "Lade GitHub-Aktivität …",
+      nowFallback: "Aktuell keine öffentliche Aktivität sichtbar.",
+      nowError: "GitHub-Aktivität gerade nicht erreichbar.",
+      nowPrefix: "Commit in",
       projectsLabel: "Nebenprojekte",
       projectsH2: "Was ich außerhalb des Jobs baue",
       projectsIntro: "Zwei kleinere Coding-Projekte auf GitHub — Spielwiese für Ideen abseits des Support-Alltags.",
@@ -725,6 +746,12 @@
       tl3Period: "2017–2018",
       tl3Desc: "First- and second-level support for hotel software, worked closely with engineering on root-cause analysis, documented solutions in the knowledge base.",
       aboutSide: "Outside of work I like coding small projects of my own — usually where technology meets stories or stars.",
+      nowLabel: "Live from GitHub",
+      nowRowLabel: "Right now",
+      nowLoading: "Loading GitHub activity …",
+      nowFallback: "No public activity visible right now.",
+      nowError: "Couldn't reach GitHub activity right now.",
+      nowPrefix: "Pushed to",
       projectsLabel: "Side projects",
       projectsH2: "What I build outside of work",
       projectsIntro: "Two small coding projects on GitHub — a playground for ideas outside the support day-to-day.",
@@ -762,6 +789,7 @@
     if (enBtn) enBtn.setAttribute('aria-pressed', String(lang === 'en'));
     currentLang = lang;
     try { localStorage.setItem('site_lang', lang); } catch (e) {}
+    if (typeof window.__renderNow === 'function') window.__renderNow();
   }
 
   (function initLang() {
@@ -850,6 +878,106 @@
         sel.addRange(range);
       } catch (e) {}
     }
+  })();
+
+  (function () {
+    var GH_USER = 'marioaininger-bot';
+    var CACHE_KEY = 'now_gh_cache_v1';
+    var CACHE_TTL_MS = 10 * 60 * 1000;
+    var nowValueEl = document.getElementById('now-value');
+    if (!nowValueEl) return;
+
+    var lastPush = null; // { repo, url, sha, at }
+
+    function relTime(iso, lang) {
+      var mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+      if (mins < 1) return lang === 'en' ? 'just now' : 'gerade eben';
+      if (mins < 60) return lang === 'en' ? mins + 'm ago' : 'vor ' + mins + ' Min.';
+      var hours = Math.round(mins / 60);
+      if (hours < 24) return lang === 'en' ? hours + 'h ago' : 'vor ' + hours + ' Std.';
+      var days = Math.round(hours / 24);
+      return lang === 'en' ? days + 'd ago' : 'vor ' + days + (days === 1 ? ' Tag' : ' Tagen');
+    }
+
+    function renderNow() {
+      var dict = I18N[currentLang] || I18N.de;
+      nowValueEl.removeAttribute('data-i18n');
+      nowValueEl.textContent = '';
+      if (!lastPush) {
+        nowValueEl.textContent = dict.nowFallback;
+        return;
+      }
+      var link = document.createElement('a');
+      link.className = 'now-link';
+      link.href = lastPush.url;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = dict.nowPrefix + ' ' + lastPush.repo;
+      var time = document.createElement('span');
+      time.className = 'now-time';
+      time.textContent = ' ' + relTime(lastPush.at, currentLang);
+      nowValueEl.appendChild(link);
+      nowValueEl.appendChild(time);
+    }
+    window.__renderNow = renderNow;
+
+    function applyFromEvents(events) {
+      for (var i = 0; i < events.length; i++) {
+        var ev = events[i];
+        if (ev.type === 'PushEvent' && ev.payload && ev.payload.commits && ev.payload.commits.length) {
+          var commit = ev.payload.commits[ev.payload.commits.length - 1];
+          lastPush = {
+            repo: ev.repo.name,
+            url: 'https://github.com/' + ev.repo.name + '/commit/' + commit.sha,
+            sha: commit.sha,
+            at: ev.created_at
+          };
+          return;
+        }
+      }
+      lastPush = null;
+    }
+
+    function fromCache() {
+      try {
+        var raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        var cached = JSON.parse(raw);
+        if (!cached || (Date.now() - cached.savedAt) > CACHE_TTL_MS) return null;
+        return cached.lastPush;
+      } catch (e) { return null; }
+    }
+
+    function toCache(value) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), lastPush: value }));
+      } catch (e) {}
+    }
+
+    var cached = fromCache();
+    if (cached !== null) {
+      lastPush = cached;
+      renderNow();
+      return;
+    }
+
+    fetch('https://api.github.com/users/' + GH_USER + '/events/public?per_page=30', {
+      headers: { Accept: 'application/vnd.github+json' }
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('github ' + res.status);
+        return res.json();
+      })
+      .then(function (events) {
+        applyFromEvents(events);
+        toCache(lastPush);
+        renderNow();
+      })
+      .catch(function () {
+        var dict = I18N[currentLang] || I18N.de;
+        nowValueEl.removeAttribute('data-i18n');
+        nowValueEl.textContent = dict.nowError;
+      });
   })();
 
   (function () {
