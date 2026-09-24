@@ -452,6 +452,8 @@
   /* ---------- Now (live GitHub activity) ---------- */
   .now-card { margin-top: 30px; }
   .now-card .section-label { margin-bottom: 10px; }
+  .now-list { display: flex; flex-direction: column; gap: 10px; }
+  .now-row .label { min-width: 54px; }
   .now-link { text-decoration: none; border-bottom: 1px solid var(--border); color: inherit; }
   .now-link:hover { border-color: var(--accent-teal); color: var(--accent-teal); }
   .now-time { color: var(--ink-muted); margin-left: 6px; }
@@ -619,9 +621,10 @@
 
       <div class="now-card">
         <span class="section-label" data-i18n="nowLabel">Live von GitHub</span>
-        <div class="contact-row">
-          <span class="label" data-i18n="nowRowLabel">Gerade</span>
-          <span class="value" id="now-value" data-i18n="nowLoading">Lade GitHub-Aktivität …</span>
+        <div class="now-list" id="now-list">
+          <div class="contact-row now-row">
+            <span class="value" id="now-value" data-i18n="nowLoading">Lade GitHub-Aktivität …</span>
+          </div>
         </div>
       </div>
     </section>
@@ -698,12 +701,18 @@
       tl3Period: "2017–2018",
       tl3Desc: "First- und Second-Level-Support für Hotelsoftware, enge Zusammenarbeit mit der Entwicklung zur Fehleranalyse, Dokumentation von Lösungen im Wissenssystem.",
       aboutSide: "Neben dem Job code ich gerne an eigenen kleinen Projekten — meist dort, wo Technik auf Geschichten oder Sterne trifft.",
-      nowLabel: "Live von GitHub",
-      nowRowLabel: "Gerade",
+      nowLabel: "Live von GitHub — letzte 5 Aktivitäten",
       nowLoading: "Lade GitHub-Aktivität …",
       nowFallback: "Aktuell keine öffentliche Aktivität sichtbar.",
       nowError: "GitHub-Aktivität gerade nicht erreichbar.",
-      nowPrefix: "Commit in",
+      nowTagPush: "PUSH",
+      nowTagPrOpen: "PR",
+      nowTagPrMerge: "MERGE",
+      nowTagCreate: "NEU",
+      nowPushText: "Commit in",
+      nowPrOpenText: "PR eröffnet in",
+      nowPrMergeText: "PR gemerged in",
+      nowCreateText: "Neu angelegt in",
       projectsLabel: "Nebenprojekte",
       projectsH2: "Was ich außerhalb des Jobs baue",
       projectsIntro: "Zwei kleinere Coding-Projekte auf GitHub — Spielwiese für Ideen abseits des Support-Alltags.",
@@ -746,12 +755,18 @@
       tl3Period: "2017–2018",
       tl3Desc: "First- and second-level support for hotel software, worked closely with engineering on root-cause analysis, documented solutions in the knowledge base.",
       aboutSide: "Outside of work I like coding small projects of my own — usually where technology meets stories or stars.",
-      nowLabel: "Live from GitHub",
-      nowRowLabel: "Right now",
+      nowLabel: "Live from GitHub — last 5 activities",
       nowLoading: "Loading GitHub activity …",
       nowFallback: "No public activity visible right now.",
       nowError: "Couldn't reach GitHub activity right now.",
-      nowPrefix: "Pushed to",
+      nowTagPush: "PUSH",
+      nowTagPrOpen: "PR",
+      nowTagPrMerge: "MERGE",
+      nowTagCreate: "NEW",
+      nowPushText: "Pushed to",
+      nowPrOpenText: "Opened PR in",
+      nowPrMergeText: "Merged PR in",
+      nowCreateText: "Created new in",
       projectsLabel: "Side projects",
       projectsH2: "What I build outside of work",
       projectsIntro: "Two small coding projects on GitHub — a playground for ideas outside the support day-to-day.",
@@ -882,12 +897,14 @@
 
   (function () {
     var GH_USER = 'marioaininger-bot';
-    var CACHE_KEY = 'now_gh_cache_v1';
+    var MAX_ITEMS = 5;
+    var CACHE_KEY = 'now_gh_cache_v2';
     var CACHE_TTL_MS = 10 * 60 * 1000;
+    var nowListEl = document.getElementById('now-list');
     var nowValueEl = document.getElementById('now-value');
-    if (!nowValueEl) return;
+    if (!nowListEl || !nowValueEl) return;
 
-    var lastPush = null; // { repo, url, sha, at }
+    var nowItems = null; // array of { tagKey, textKey, repo, url, at } or null (not loaded / error)
 
     function relTime(iso, lang) {
       var mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
@@ -899,64 +916,114 @@
       return lang === 'en' ? days + 'd ago' : 'vor ' + days + (days === 1 ? ' Tag' : ' Tagen');
     }
 
+    function showMessage(text) {
+      nowListEl.innerHTML = '';
+      var row = document.createElement('div');
+      row.className = 'contact-row now-row';
+      var value = document.createElement('span');
+      value.className = 'value';
+      value.textContent = text;
+      row.appendChild(value);
+      nowListEl.appendChild(row);
+    }
+
     function renderNow() {
       var dict = I18N[currentLang] || I18N.de;
-      nowValueEl.removeAttribute('data-i18n');
-      nowValueEl.textContent = '';
-      if (!lastPush) {
-        nowValueEl.textContent = dict.nowFallback;
+      if (nowItems === null) {
+        showMessage(dict.nowError);
         return;
       }
-      var link = document.createElement('a');
-      link.className = 'now-link';
-      link.href = lastPush.url;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = dict.nowPrefix + ' ' + lastPush.repo;
-      var time = document.createElement('span');
-      time.className = 'now-time';
-      time.textContent = ' ' + relTime(lastPush.at, currentLang);
-      nowValueEl.appendChild(link);
-      nowValueEl.appendChild(time);
+      if (nowItems.length === 0) {
+        showMessage(dict.nowFallback);
+        return;
+      }
+      nowListEl.innerHTML = '';
+      nowItems.forEach(function (item) {
+        var row = document.createElement('div');
+        row.className = 'contact-row now-row';
+
+        var tag = document.createElement('span');
+        tag.className = 'label';
+        tag.textContent = dict[item.tagKey];
+
+        var value = document.createElement('span');
+        value.className = 'value';
+        var link = document.createElement('a');
+        link.className = 'now-link';
+        link.href = item.url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = dict[item.textKey] + ' ' + item.repo;
+        var time = document.createElement('span');
+        time.className = 'now-time';
+        time.textContent = ' ' + relTime(item.at, currentLang);
+        value.appendChild(link);
+        value.appendChild(time);
+
+        row.appendChild(tag);
+        row.appendChild(value);
+        nowListEl.appendChild(row);
+      });
     }
     window.__renderNow = renderNow;
 
-    function applyFromEvents(events) {
-      for (var i = 0; i < events.length; i++) {
-        var ev = events[i];
-        if (ev.type === 'PushEvent' && ev.payload && ev.payload.commits && ev.payload.commits.length) {
-          var commit = ev.payload.commits[ev.payload.commits.length - 1];
-          lastPush = {
-            repo: ev.repo.name,
-            url: 'https://github.com/' + ev.repo.name + '/commit/' + commit.sha,
-            sha: commit.sha,
-            at: ev.created_at
-          };
-          return;
-        }
+    function fromEvent(ev) {
+      var repo = (ev.repo.name.split('/')[1] || ev.repo.name);
+      if (ev.type === 'PushEvent') {
+        var commits = ev.payload && ev.payload.commits;
+        var sha = commits && commits.length ? commits[commits.length - 1].sha : null;
+        return {
+          tagKey: 'nowTagPush', textKey: 'nowPushText', repo: repo,
+          url: 'https://github.com/' + ev.repo.name + (sha ? '/commit/' + sha : ''),
+          at: ev.created_at
+        };
       }
-      lastPush = null;
+      if (ev.type === 'PullRequestEvent' && ev.payload && ev.payload.pull_request) {
+        var merged = ev.payload.action === 'closed' && ev.payload.pull_request.merged;
+        if (ev.payload.action !== 'opened' && !merged) return null;
+        return {
+          tagKey: merged ? 'nowTagPrMerge' : 'nowTagPrOpen',
+          textKey: merged ? 'nowPrMergeText' : 'nowPrOpenText',
+          repo: repo, url: ev.payload.pull_request.html_url, at: ev.created_at
+        };
+      }
+      if (ev.type === 'CreateEvent' && ev.payload && ev.payload.ref_type === 'repository') {
+        return {
+          tagKey: 'nowTagCreate', textKey: 'nowCreateText', repo: repo,
+          url: 'https://github.com/' + ev.repo.name, at: ev.created_at
+        };
+      }
+      return null;
+    }
+
+    function applyFromEvents(events) {
+      var items = [];
+      for (var i = 0; i < events.length && items.length < MAX_ITEMS; i++) {
+        var item = fromEvent(events[i]);
+        if (item) items.push(item);
+      }
+      nowItems = items;
     }
 
     function fromCache() {
       try {
         var raw = localStorage.getItem(CACHE_KEY);
-        if (!raw) return null;
+        if (!raw) return undefined;
         var cached = JSON.parse(raw);
-        if (!cached || (Date.now() - cached.savedAt) > CACHE_TTL_MS) return null;
-        return cached.lastPush;
-      } catch (e) { return null; }
+        if (!cached || (Date.now() - cached.savedAt) > CACHE_TTL_MS) return undefined;
+        return cached.items;
+      } catch (e) { return undefined; }
     }
 
-    function toCache(value) {
+    function toCache(items) {
       try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), lastPush: value }));
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), items: items }));
       } catch (e) {}
     }
 
     var cached = fromCache();
-    if (cached !== null) {
-      lastPush = cached;
+    if (cached !== undefined) {
+      nowItems = cached;
       renderNow();
       return;
     }
@@ -970,13 +1037,12 @@
       })
       .then(function (events) {
         applyFromEvents(events);
-        toCache(lastPush);
+        toCache(nowItems);
         renderNow();
       })
       .catch(function () {
-        var dict = I18N[currentLang] || I18N.de;
-        nowValueEl.removeAttribute('data-i18n');
-        nowValueEl.textContent = dict.nowError;
+        nowItems = null;
+        renderNow();
       });
   })();
 
