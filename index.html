@@ -923,7 +923,7 @@
   (function () {
     var GH_USER = 'marioaininger-bot';
     var MAX_ITEMS = 5;
-    var CACHE_KEY = 'now_gh_cache_v3';
+    var CACHE_KEY = 'now_gh_cache_v4';
     var CACHE_TTL_MS = 10 * 60 * 1000;
     var nowListEl = document.getElementById('now-list');
     var nowValueEl = document.getElementById('now-value');
@@ -1012,7 +1012,7 @@
       if (ev.type === 'PushEvent') {
         var commits = ev.payload && ev.payload.commits;
         var last = commits && commits.length ? commits[commits.length - 1] : null;
-        var sha = last ? last.sha : null;
+        var sha = last ? last.sha : (ev.payload && ev.payload.head) || null;
         var total = ev.payload && ev.payload.size ? ev.payload.size : (commits ? commits.length : 0);
         var ref = ev.payload && ev.payload.ref ? ev.payload.ref.replace('refs/heads/', '') : '';
         return {
@@ -1020,6 +1020,7 @@
           url: 'https://github.com/' + ev.repo.name + (sha ? '/commit/' + sha : ''),
           at: ev.created_at,
           detail: last && last.message ? last.message.split('\n')[0] : '',
+          api: sha ? 'https://api.github.com/repos/' + ev.repo.name + '/commits/' + sha : null,
           branch: ref,
           more: total > 1 ? total - 1 : 0
         };
@@ -1031,7 +1032,9 @@
           tagKey: merged ? 'nowTagPrMerge' : 'nowTagPrOpen',
           textKey: merged ? 'nowPrMergeText' : 'nowPrOpenText',
           repo: repo, url: ev.payload.pull_request.html_url, at: ev.created_at,
-          detail: '#' + ev.payload.pull_request.number + ' ' + ev.payload.pull_request.title
+          detail: ev.payload.pull_request.title
+            ? '#' + ev.payload.pull_request.number + ' ' + ev.payload.pull_request.title : '',
+          api: ev.payload.pull_request.url || null
         };
       }
       if (ev.type === 'CreateEvent' && ev.payload && ev.payload.ref_type === 'repository') {
@@ -1051,6 +1054,21 @@
         if (item) items.push(item);
       }
       nowItems = items;
+    }
+
+    // Events enthalten oft weder Commit-Message noch PR-Titel -> gezielt nachladen
+    function enrich(item) {
+      if (item.detail || !item.api) return Promise.resolve();
+      return fetch(item.api, { headers: { Accept: 'application/vnd.github+json' } })
+        .then(function (res) {
+          if (!res.ok) throw new Error('github ' + res.status);
+          return res.json();
+        })
+        .then(function (d) {
+          if (d.commit && d.commit.message) item.detail = d.commit.message.split('\n')[0];
+          else if (d.title) item.detail = '#' + d.number + ' ' + d.title;
+        })
+        .catch(function () {});
     }
 
     function fromCache() {
@@ -1085,12 +1103,15 @@
       })
       .then(function (events) {
         applyFromEvents(events);
+        renderNow();
+        return Promise.all(nowItems.map(enrich));
+      })
+      .then(function () {
         toCache(nowItems);
         renderNow();
       })
       .catch(function () {
-        nowItems = null;
-        renderNow();
+        if (nowItems === null) renderNow();
       });
   })();
 
