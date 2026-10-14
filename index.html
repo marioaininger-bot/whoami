@@ -457,6 +457,17 @@
   .now-link { text-decoration: none; border-bottom: 1px solid var(--border); color: inherit; }
   .now-link:hover { border-color: var(--accent-teal); color: var(--accent-teal); }
   .now-time { color: var(--ink-muted); margin-left: 6px; }
+  .now-row .value { flex: 1; min-width: 0; }
+  .now-detail {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .now-meta { opacity: 0.8; margin-left: 6px; }
 
   footer {
     padding-block: 28px 40px;
@@ -719,6 +730,7 @@
       nowPrOpenText: "PR eröffnet in",
       nowPrMergeText: "PR gemerged in",
       nowCreateText: "Neu angelegt in",
+      nowMore: "weitere",
       projectsLabel: "Nebenprojekte",
       projectsH2: "Was ich außerhalb des Jobs baue",
       projectsIntro: "Drei kleinere Coding-Projekte auf GitHub — Spielwiese für Ideen abseits des Support-Alltags.",
@@ -776,6 +788,7 @@
       nowPrOpenText: "Opened PR in",
       nowPrMergeText: "Merged PR in",
       nowCreateText: "Created new in",
+      nowMore: "more",
       projectsLabel: "Side projects",
       projectsH2: "What I build outside of work",
       projectsIntro: "Three small coding projects on GitHub — a playground for ideas outside the support day-to-day.",
@@ -910,7 +923,7 @@
   (function () {
     var GH_USER = 'marioaininger-bot';
     var MAX_ITEMS = 5;
-    var CACHE_KEY = 'now_gh_cache_v2';
+    var CACHE_KEY = 'now_gh_cache_v3';
     var CACHE_TTL_MS = 10 * 60 * 1000;
     var nowListEl = document.getElementById('now-list');
     var nowValueEl = document.getElementById('now-value');
@@ -971,6 +984,21 @@
         time.textContent = ' ' + relTime(item.at, currentLang);
         value.appendChild(link);
         value.appendChild(time);
+        if (item.detail || item.branch || item.more) {
+          var detail = document.createElement('span');
+          detail.className = 'now-detail';
+          detail.textContent = item.detail || '';
+          var meta = [];
+          if (item.branch) meta.push(item.branch);
+          if (item.more) meta.push('+' + item.more + ' ' + dict.nowMore);
+          if (meta.length) {
+            var metaEl = document.createElement('span');
+            metaEl.className = 'now-meta';
+            metaEl.textContent = (item.detail ? '· ' : '') + meta.join(' · ');
+            detail.appendChild(metaEl);
+          }
+          value.appendChild(detail);
+        }
 
         row.appendChild(tag);
         row.appendChild(value);
@@ -983,11 +1011,17 @@
       var repo = (ev.repo.name.split('/')[1] || ev.repo.name);
       if (ev.type === 'PushEvent') {
         var commits = ev.payload && ev.payload.commits;
-        var sha = commits && commits.length ? commits[commits.length - 1].sha : null;
+        var last = commits && commits.length ? commits[commits.length - 1] : null;
+        var sha = last ? last.sha : null;
+        var total = ev.payload && ev.payload.size ? ev.payload.size : (commits ? commits.length : 0);
+        var ref = ev.payload && ev.payload.ref ? ev.payload.ref.replace('refs/heads/', '') : '';
         return {
           tagKey: 'nowTagPush', textKey: 'nowPushText', repo: repo,
           url: 'https://github.com/' + ev.repo.name + (sha ? '/commit/' + sha : ''),
-          at: ev.created_at
+          at: ev.created_at,
+          detail: last && last.message ? last.message.split('\n')[0] : '',
+          branch: ref,
+          more: total > 1 ? total - 1 : 0
         };
       }
       if (ev.type === 'PullRequestEvent' && ev.payload && ev.payload.pull_request) {
@@ -996,13 +1030,15 @@
         return {
           tagKey: merged ? 'nowTagPrMerge' : 'nowTagPrOpen',
           textKey: merged ? 'nowPrMergeText' : 'nowPrOpenText',
-          repo: repo, url: ev.payload.pull_request.html_url, at: ev.created_at
+          repo: repo, url: ev.payload.pull_request.html_url, at: ev.created_at,
+          detail: '#' + ev.payload.pull_request.number + ' ' + ev.payload.pull_request.title
         };
       }
       if (ev.type === 'CreateEvent' && ev.payload && ev.payload.ref_type === 'repository') {
         return {
           tagKey: 'nowTagCreate', textKey: 'nowCreateText', repo: repo,
-          url: 'https://github.com/' + ev.repo.name, at: ev.created_at
+          url: 'https://github.com/' + ev.repo.name, at: ev.created_at,
+          detail: ev.payload.description || ''
         };
       }
       return null;
