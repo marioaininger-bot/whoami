@@ -382,6 +382,7 @@
     transition: border-color .15s ease, transform .15s ease;
   }
   .project-card:hover { border-color: var(--accent-teal); transform: translateY(-2px); }
+  .project-card-static:hover { border-color: var(--border); transform: none; }
   .project-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   .project-tag {
     font-family: "IBM Plex Mono", monospace;
@@ -643,7 +644,7 @@
     <section class="projects" id="projects">
       <span class="section-label" data-i18n="projectsLabel">Nebenprojekte</span>
       <h2 data-i18n="projectsH2">Was ich außerhalb des Jobs baue</h2>
-      <p data-i18n="projectsIntro">Vier kleinere Coding-Projekte auf GitHub, teils mit der Claude-API — Spielwiese für Ideen und Automatisierungen abseits des Support-Alltags.</p>
+      <p data-i18n="projectsIntro">Fünf kleinere Projekte, die meisten auf GitHub und teils mit der Claude-API — Spielwiese für Ideen und Automatisierungen abseits des Support-Alltags.</p>
       <div class="project-grid">
         <a class="project-card" href="https://github.com/marioaininger-bot/bedtimestory" target="_blank" rel="noopener">
           <span class="project-tag" data-i18n="p1Tag">Web-App</span>
@@ -669,6 +670,12 @@
           <p data-i18n="p4Desc">Live-Abfahrten der Wiener Linien für meinen Alltag: 98A (Höchlegasse), 26A (Lohwaggasse) und U2 (Aspernstraße) untereinander — mit Countdown, Verspätungsanzeige und automatischer Aktualisierung. Drei Ansichten (Hell, Tafel, Modern) zum Umschalten; ein kleiner Cloudflare-Worker liefert die Daten.</p>
           <span class="project-repo">↗ github.com/marioaininger-bot/oeffi</span>
         </a>
+        <div class="project-card project-card-static">
+          <span class="project-tag" data-i18n="p5Tag">Claude Artifact</span>
+          <h3 data-i18n="p5Title">Jarvis</h3>
+          <p data-i18n="p5Desc">Persönliches Dashboard als Claude Artifact: bündelt Live-Daten aus Jira und Notion an einem Ort — Aufgaben und Status auf einen Blick, gebaut mit Claude.</p>
+          <span class="project-repo" data-i18n="p5Note">Nicht öffentlich</span>
+        </div>
       </div>
     </section>
 
@@ -739,7 +746,7 @@
       nowMore: "weitere",
       projectsLabel: "Nebenprojekte",
       projectsH2: "Was ich außerhalb des Jobs baue",
-      projectsIntro: "Vier kleinere Coding-Projekte auf GitHub, teils mit der Claude-API — Spielwiese für Ideen und Automatisierungen abseits des Support-Alltags.",
+      projectsIntro: "Fünf kleinere Projekte, die meisten auf GitHub und teils mit der Claude-API — Spielwiese für Ideen und Automatisierungen abseits des Support-Alltags.",
       p1Tag: "Web-App",
       p1Title: "Gute Nacht Geschichte",
       p1Desc: "Kinder wählen Genre und Lesedauer, eine KI schreibt daraus eine personalisierte Gute-Nacht-Geschichte — inklusive Kinderprofil, Vorlesefunktion und Einschlaf-Animationen.",
@@ -752,6 +759,10 @@
       p4Tag: "Web-App",
       p4Title: "Öffi-Abfahrten",
       p4Desc: "Live-Abfahrten der Wiener Linien für meinen Alltag: 98A (Höchlegasse), 26A (Lohwaggasse) und U2 (Aspernstraße) untereinander — mit Countdown, Verspätungsanzeige und automatischer Aktualisierung. Drei Ansichten (Hell, Tafel, Modern) zum Umschalten; ein kleiner Cloudflare-Worker liefert die Daten.",
+      p5Tag: "Claude Artifact",
+      p5Title: "Jarvis",
+      p5Desc: "Persönliches Dashboard als Claude Artifact: bündelt Live-Daten aus Jira und Notion an einem Ort — Aufgaben und Status auf einen Blick, gebaut mit Claude.",
+      p5Note: "Nicht öffentlich",
       contactLabel: "Kontakt",
       contactH2: "Melde dich gern",
       contactIntro: "Ab Januar offen für neue Aufgaben im Bereich IT-Service-Management / Service Delivery, gerne in Wien. Am einfachsten erreichst du mich per E-Mail. Adresse zum Kopieren:",
@@ -800,7 +811,7 @@
       nowMore: "more",
       projectsLabel: "Side projects",
       projectsH2: "What I build outside of work",
-      projectsIntro: "Four small coding projects on GitHub, some built on the Claude API — a playground for ideas and automation outside the support day-to-day.",
+      projectsIntro: "Five small projects, most of them on GitHub and some built on the Claude API — a playground for ideas and automation outside the support day-to-day.",
       p1Tag: "Web app",
       p1Title: "Goodnight Story",
       p1Desc: "Kids pick a genre and reading length, and an AI writes a personalized bedtime story from it — including a child profile, read-aloud and cozy loading animations. (German-language app.)",
@@ -813,6 +824,10 @@
       p4Tag: "Web app",
       p4Title: "Öffi Departures",
       p4Desc: "Live Vienna public-transport departures for my daily routes: 98A (Höchlegasse), 26A (Lohwaggasse) and U2 (Aspernstraße) stacked on one page — with countdown, delay indicator and auto-refresh. Three switchable views (light, board, modern); a small Cloudflare Worker supplies the data. (German-language app.)",
+      p5Tag: "Claude Artifact",
+      p5Title: "Jarvis",
+      p5Desc: "Personal dashboard built as a Claude Artifact: brings live data from Jira and Notion together in one place — tasks and status at a glance, built with Claude.",
+      p5Note: "Not public",
       contactLabel: "Contact",
       contactH2: "Get in touch",
       contactIntro: "Open to new roles from January in IT service management / service delivery, preferably in Vienna. The easiest way to reach me is by email. Address to copy:",
